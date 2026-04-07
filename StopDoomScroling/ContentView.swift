@@ -14,23 +14,29 @@ struct Task: Identifiable, Codable, Equatable {
 }
 
 struct ContentView: View {
-    @State private var started = false
-    @State private var page2Started = false
-    @State private var page3Started = false
+    @State private var currentScreen: CurrentScreen = .startMenu
     @State private var userList: [Task] = []
     @State private var completedTasks: [Task] = []
     @State var points = 0
     
     var body: some View {
         VStack{
-            if started {
-                MainView(started: $started, userList: $userList, completedTasks: $completedTasks, points: $points)
-            } else if page2Started{
-                CompletedList(page2Started: $page2Started,completedTasks: $completedTasks, userList: $userList)
-            } else if page3Started{
-                ShopStore(page3Started: $page3Started, points: $points)
-                }else {
-                    StartMenuView(started: $started, page2Started: $page2Started, page3Started: $page3Started) }
+            switch currentScreen {
+            case .startMenu:
+                StartMenuView(currentScreen: $currentScreen)
+            case .taskScreen:
+                MainView(
+                    userList: $userList,
+                    completedTasks: $completedTasks,
+                    points: $points,
+                    currentScreen: $currentScreen)
+            case .doomShop:
+                ShopStore(
+                    points: $points,
+                    currentScreen: $currentScreen)
+            case .completedTasks:
+                CompletedList(completedTasks: $completedTasks, userList: $userList, currentScreen: $currentScreen)
+            }
         }
         .onAppear{
             //This boots up past points

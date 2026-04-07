@@ -9,11 +9,11 @@ import SwiftUI
 
 
 struct ShopStore: View{
-    @Binding var page3Started: Bool
-    @Binding var points: Int
-    
     @State private var shopBuy = false
     @State private var selectedItem: String? = nil
+    
+    @Binding var points: Int
+    @Binding var currentScreen: CurrentScreen
     
     
     var body: some View{
@@ -55,19 +55,9 @@ struct ShopStore: View{
                 Alert(title: Text("Do You want to purchase this!?"),
                       message: Text("DSC will be withdrawn"),
                       primaryButton: .default(Text("YES")){
-                   if selectedItem == "15Min"{
-                       buy15Min()
-                       shopBuy = false
-                    } else if selectedItem == "30Min"{
-                       buy30Min()
-                       shopBuy = false
-                   } else if selectedItem == "1Hour"{
-                        buy1Hour()
-                        shopBuy = false
-                   } else {
-                       print("Brother you have an issue")
-                       shopBuy = false
-                   }
+                 
+                    buyTime()
+                    shopBuy = false
                    
                             
                 },
@@ -85,35 +75,34 @@ struct ShopStore: View{
         
     
             func backToMenu(){
-                page3Started = false
+                currentScreen = .startMenu
             }
     
-    func buy15Min(){
-        if points < 30{
-            print("You need 30 points !")
-        } else if points >= 30{
-            shopBuy = true
-            points -= 30
-        }
-    }
+  
     
-    func buy30Min(){
-        if points < 50{
-            print("You need 50 points !")
-        } else if points >= 50{
-            shopBuy = true
-                points -= 50
-            
+    func buyTime(){
+        let prices = [
+            "15Min": 30,
+            "30Min": 50,
+            "1Hour": 80
+        ]
+        
+        guard let selectedItem = selectedItem else{
+            print("No item selected")
+            return
         }
-    }
-    
-    func buy1Hour(){
-        if points < 80{
-            print("You need 80 points !")
-        } else if points >= 80{
-            shopBuy = true
-            points -= 80
+        
+        guard let cost = prices[selectedItem] else {
+            print("invalid item")
+            return
         }
+        guard points >= cost else{
+            print("You need \(cost - points) points!")
+            return
+        }
+        shopBuy = true
+        points -= cost
+      
     }
   
     

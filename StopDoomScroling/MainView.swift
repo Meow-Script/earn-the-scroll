@@ -7,8 +7,13 @@
 
 import SwiftUI
 
+struct TaskButton: Identifiable{
+    let id = UUID()
+    let label: String
+    let action: () -> Void
+}
+
 struct MainView: View{
-    @Binding var started: Bool
     @State private var userTask = ""
     @Binding var userList: [Task]
     @Binding var completedTasks: [Task]
@@ -19,6 +24,9 @@ struct MainView: View{
     @State private var deleteTaskToConfirm: Task?
     @State private var selectedTask: Task?
     @State private var expandedTaskID: UUID?
+    
+    @Binding var currentScreen: CurrentScreen
+
     
     
     var body: some View{
@@ -73,60 +81,51 @@ struct MainView: View{
                         Spacer()
                         
                         Button("👉  ⚙️"){
-                            taskToConfirm = item
+                            if expandedTaskID == item.id {
+                                expandedTaskID = nil
+                            } else {
+                                expandedTaskID = item.id
+                            }
                             
                         }
-                        // .buttonStyle(.plain)
                     }
                         
                         if expandedTaskID == item.id {
                             Divider()
                             
-                                HStack{
-                                    Button("✅"){
-                                        taskToConfirm = item
-                                        
-                                    }
-                                     .buttonStyle(.plain)
-                                    Spacer()
+                            let buttons = [
+                                TaskButton(label: "✅", action: {
+                                    taskToConfirm = item}),
+                                TaskButton(label: "✏️", action:{
+                                    taskBeingEdited = item
+                                    editedTitle = item.title}),
+                                TaskButton(label: "🗑️", action:{
+                                    deleteTaskToConfirm = item})
+                            ]
+
+                            HStack(spacing: 100){
                                     
-                                    Button("✏️"){
-                                        taskBeingEdited = item
-                                        editedTitle = item.title
-                                        
+                                    ForEach(buttons) { button in
+                                        Button(button.label) {
+                                            button.action()
+                                        }
                                     }
-                                    .buttonStyle(.plain)
-                                    Spacer()
-                                    
-                                    ///ADDDDD ALERT so no accidental delletion
-                                    Button("🗑️"){
-                                        deleteTaskToConfirm = item
-                                        //userList.removeAll{ $0.id == item.id}
-                                    }
-                                    .buttonStyle(.plain)
+                                  
                                     .alert(item: $deleteTaskToConfirm){task in
                                         Alert(
                                             title: Text("Are you sure you want to delete task?"),
                                             message: Text("Once confimred deleted for ever"),
                                             primaryButton: .destructive(Text("Delete")){
-                                                userList.removeAll{ $0.id == task.id}   },
+                                                deleteTask(task: task)  },
                                             secondaryButton: .cancel())}
                                     
-                                    //Spacer()
                                 }
+                                .buttonStyle(.plain)
                                 .padding()
                             }
                         }
                 .contentShape(Rectangle())
-                .onTapGesture {
-                    withAnimation {
-                        if expandedTaskID == item.id {
-                            expandedTaskID = nil
-                        } else {
-                            expandedTaskID = item.id
-                        }
-                    }
-                }
+               
             }
                 .animation(.easeInOut, value: expandedTaskID)
                 }
@@ -135,9 +134,8 @@ struct MainView: View{
                         title: Text("Have you completed your Task?"),
                         message: Text("Be honest"),
                         primaryButton: .destructive(Text("DONE")) {
-                            points += 10
-                            completedTasks.append(task)
-                            userList.removeAll{$0.id == task.id}    },
+                            taskComplete(task: task)
+                        },
                         secondaryButton: .cancel()
                     )
                 }
@@ -151,11 +149,7 @@ struct MainView: View{
                             .padding()
                         
                         Button("Save") {
-                            if let index = userList.firstIndex(of: task) {
-                                userList[index].title = editedTitle
-                                
-                                
-                            }
+                            updateTask(task: task, title: editedTitle)
                             taskBeingEdited = nil
                         }
                         
@@ -167,6 +161,25 @@ struct MainView: View{
                 }
             }
                 
-func backToMenu(){
-    started = false }
+    
+    func backToMenu(){
+        currentScreen = .startMenu
+    }
+
+    func deleteTask(task: Task){
+        userList.removeAll{ $0.id == task.id}
+        //🔥 maybe add a - 5 points to penalize the user for making an error
+    }
+    
+    func taskComplete(task: Task) {
+        points += 10
+        completedTasks.append(task)
+        deleteTask(task: task)
+    }
+    
+    func updateTask(task: Task, title: String){
+        if let index = userList.firstIndex(of: task) {
+            userList[index].title = editedTitle
+        }
+    }
 }

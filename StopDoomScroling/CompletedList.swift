@@ -8,15 +8,14 @@
 import SwiftUI
 
 struct CompletedList: View{
-    @Binding var page2Started: Bool
-    @Binding var completedTasks: [Task]
-    
-    @State private var taskToConfirm2: Task?
     @State private var expandedTaskID: UUID?
     @State private var editedTitle = ""
     @State private var taskBeingEdited: Task?
     @State private var deleteTaskToConfirm: Task?
+    
+    @Binding var completedTasks: [Task]
     @Binding var userList: [Task]
+    @Binding var currentScreen: CurrentScreen
 
 
 
@@ -34,16 +33,19 @@ struct CompletedList: View{
             
             Text("\n🤘 COMPLETED TASKS 🤘")
                 .bold()
-            //Spacer()
+            
             List(completedTasks) { item in
                 VStack{
                     HStack{
                         Text(item.title)
-                        //Divider()
                         
                         Spacer()
-                        Button(""){
-                            taskToConfirm2 = item
+                        Button("⭐️"){
+                            if expandedTaskID == item.id {
+                                expandedTaskID = nil
+                            } else {
+                                expandedTaskID = item.id
+                            }
                         }
                     }
                     
@@ -59,10 +61,8 @@ struct CompletedList: View{
                             .buttonStyle(.plain)
                             Spacer()
                             
-                            ///ADDDDD ALERT so no accidental delletion
                             Button("🗑️"){
                                 deleteTaskToConfirm = item
-                                //userList.removeAll{ $0.id == item.id}
                             }
                             .buttonStyle(.plain)
                             .alert(item: $deleteTaskToConfirm){task in
@@ -70,7 +70,7 @@ struct CompletedList: View{
                                     title: Text("Are you sure you want to delete task?"),
                                     message: Text("Once confimred deleted for ever"),
                                     primaryButton: .destructive(Text("Delete")){
-                                        completedTasks.removeAll{ $0.id == item.id}   },
+                                        deleteTask(task: task)   },
                                     secondaryButton: .cancel())}
                                 
                                 //Spacer()
@@ -81,15 +81,6 @@ struct CompletedList: View{
                         }
                     }
                         .contentShape(Rectangle())
-                        .onTapGesture {
-                            withAnimation {
-                                if expandedTaskID == item.id {
-                                    expandedTaskID = nil
-                                } else {
-                                    expandedTaskID = item.id
-                                }
-                            }
-                        }
                     
                     
                         .sheet(item: $taskBeingEdited) { task in
@@ -102,9 +93,7 @@ struct CompletedList: View{
                                     .padding()
                                 
                                 Button("Save") {
-                                    if let index = completedTasks.firstIndex(of: task) {
-                                        completedTasks[index].title = editedTitle
-                                    }
+                                    updateTask(task: task, title: editedTitle)
                                     taskBeingEdited = nil
                                 }
                                 
@@ -120,6 +109,18 @@ struct CompletedList: View{
         }
     
     func backToMenu(){
-        page2Started = false
+        currentScreen = .startMenu
+    }
+    
+    func deleteTask(task: Task){
+        completedTasks.removeAll{ $0.id == task.id}
+    }
+    
+    func updateTask(task: Task, title: String){
+        if let index = completedTasks.firstIndex(of: task) {
+            completedTasks[index].title = title
+            
+            
+        }
     }
 }

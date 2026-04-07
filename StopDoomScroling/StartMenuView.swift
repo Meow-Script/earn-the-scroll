@@ -6,36 +6,32 @@
 //
 import SwiftUI
 
+enum CurrentScreen {
+    case startMenu
+    case taskScreen
+    case doomShop
+    case completedTasks
+}
+
 struct StartMenuView: View{
-    @Binding var started: Bool
-    @Binding var page2Started: Bool
-    @Binding var page3Started: Bool
+    @Binding var currentScreen: CurrentScreen
     
     var body: some View{
         VStack{
-            Button("Start App", action: startGame)
-                .padding()
-            Button("Shop", action: tokenShop)
-                .padding()
-            Button("Completed Tasks", action: gameHistory)
-                .padding()
-        } }
-    func startGame(){
-        started = true
-        page2Started = false
-        page3Started = false
-    }
-    
-    func tokenShop(){
-        started = false
-        page2Started = false
-        page3Started = true
-    }
-    
-    func gameHistory(){
-        started = false
-        page2Started = true
-        page3Started = false
+            Button("Start App"){
+                currentScreen = .taskScreen
+            }
+            .padding()
+            Button("Shop"){
+                currentScreen = .doomShop
+            }
+            .padding()
+            Button("Completed Tasks"){
+                currentScreen = .completedTasks
+                
+            }
+            .padding()
+        }
     }
     
 }
